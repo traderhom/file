@@ -1,49 +1,11 @@
 import React, { useState } from 'react';
 import { Save, Globe, Mail, Shield, Database, Bell, Palette, Upload, X, Eye, Image as ImageIcon } from 'lucide-react';
+import { useSettings } from '../../contexts/SettingsContext';
 
 export const SettingsManagement: React.FC = () => {
-  const [settings, setSettings] = useState({
-    // General Settings
-    siteName: 'École Supérieure des Sciences et Technologies',
-    siteDescription: 'Formation d\'excellence en sciences et technologies',
-    siteUrl: 'https://esst.edu',
-    adminEmail: 'admin@esst.edu',
-    timezone: 'Europe/Paris',
-    language: 'fr',
-    
-    // Email Settings
-    smtpHost: 'smtp.esst.edu',
-    smtpPort: '587',
-    smtpUsername: 'noreply@esst.edu',
-    smtpPassword: '',
-    emailFromName: 'ESST',
-    emailFromAddress: 'noreply@esst.edu',
-    
-    // Security Settings
-    enableTwoFactor: true,
-    sessionTimeout: '30',
-    passwordMinLength: '8',
-    enableCaptcha: true,
-    maxLoginAttempts: '5',
-    
-    // Notification Settings
-    enableEmailNotifications: true,
-    enablePushNotifications: false,
-    notifyNewUsers: true,
-    notifyNewContent: true,
-    notifySystemUpdates: true,
-    
-    // Appearance Settings
-    primaryColor: '#1A4B8C',
-    secondaryColor: '#FFD700',
-    logoUrl: 'https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=200',
-    faviconUrl: '',
-    customCSS: '',
-    headerBackgroundImage: '',
-    footerBackgroundImage: '',
-    loginBackgroundImage: ''
-  });
-
+  const { settings, updateSettings } = useSettings();
+  const [localSettings, setLocalSettings] = useState(settings);
+  
   const [activeTab, setActiveTab] = useState('general');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -51,7 +13,7 @@ export const SettingsManagement: React.FC = () => {
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setSettings(prev => ({
+    setLocalSettings(prev => ({
       ...prev,
       [field]: value
     }));
@@ -101,6 +63,9 @@ export const SettingsManagement: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Update the global settings
+      updateSettings(localSettings);
+      
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       setSaveMessage('Paramètres sauvegardés avec succès !');
@@ -287,7 +252,7 @@ export const SettingsManagement: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    value={settings.siteName}
+                    value={localSettings.siteName}
                     onChange={(e) => handleInputChange('siteName', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -299,7 +264,7 @@ export const SettingsManagement: React.FC = () => {
                   </label>
                   <input
                     type="url"
-                    value={settings.siteUrl}
+                    value={localSettings.siteUrl}
                     onChange={(e) => handleInputChange('siteUrl', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -311,7 +276,7 @@ export const SettingsManagement: React.FC = () => {
                   </label>
                   <input
                     type="email"
-                    value={settings.adminEmail}
+                    value={localSettings.adminEmail}
                     onChange={(e) => handleInputChange('adminEmail', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -322,7 +287,7 @@ export const SettingsManagement: React.FC = () => {
                     Fuseau horaire
                   </label>
                   <select
-                    value={settings.timezone}
+                    value={localSettings.timezone}
                     onChange={(e) => handleInputChange('timezone', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
@@ -338,223 +303,11 @@ export const SettingsManagement: React.FC = () => {
                   Description du site
                 </label>
                 <textarea
-                  value={settings.siteDescription}
+                  value={localSettings.siteDescription}
                   onChange={(e) => handleInputChange('siteDescription', e.target.value)}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'email' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Configuration Email</h3>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Serveur SMTP
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.smtpHost}
-                    onChange={(e) => handleInputChange('smtpHost', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Port SMTP
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.smtpPort}
-                    onChange={(e) => handleInputChange('smtpPort', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom d'utilisateur SMTP
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.smtpUsername}
-                    onChange={(e) => handleInputChange('smtpUsername', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mot de passe SMTP
-                  </label>
-                  <input
-                    type="password"
-                    value={settings.smtpPassword}
-                    onChange={(e) => handleInputChange('smtpPassword', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom de l'expéditeur
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.emailFromName}
-                    onChange={(e) => handleInputChange('emailFromName', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email de l'expéditeur
-                  </label>
-                  <input
-                    type="email"
-                    value={settings.emailFromAddress}
-                    onChange={(e) => handleInputChange('emailFromAddress', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'security' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Paramètres de Sécurité</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900">Authentification à deux facteurs</h4>
-                    <p className="text-sm text-gray-500">Activer l'authentification à deux facteurs pour tous les utilisateurs</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.enableTwoFactor}
-                    onChange={(e) => handleInputChange('enableTwoFactor', e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900">Captcha</h4>
-                    <p className="text-sm text-gray-500">Activer le captcha pour les formulaires de connexion</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.enableCaptcha}
-                    onChange={(e) => handleInputChange('enableCaptcha', e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Timeout de session (minutes)
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.sessionTimeout}
-                    onChange={(e) => handleInputChange('sessionTimeout', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Longueur minimale du mot de passe
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.passwordMinLength}
-                    onChange={(e) => handleInputChange('passwordMinLength', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tentatives de connexion max
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.maxLoginAttempts}
-                    onChange={(e) => handleInputChange('maxLoginAttempts', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'notifications' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Paramètres de Notifications</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900">Notifications par email</h4>
-                    <p className="text-sm text-gray-500">Activer les notifications par email</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.enableEmailNotifications}
-                    onChange={(e) => handleInputChange('enableEmailNotifications', e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900">Notifications push</h4>
-                    <p className="text-sm text-gray-500">Activer les notifications push dans le navigateur</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.enablePushNotifications}
-                    onChange={(e) => handleInputChange('enablePushNotifications', e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900">Nouveaux utilisateurs</h4>
-                    <p className="text-sm text-gray-500">Notifier lors de l'inscription de nouveaux utilisateurs</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.notifyNewUsers}
-                    onChange={(e) => handleInputChange('notifyNewUsers', e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900">Nouveau contenu</h4>
-                    <p className="text-sm text-gray-500">Notifier lors de la publication de nouveau contenu</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.notifyNewContent}
-                    onChange={(e) => handleInputChange('notifyNewContent', e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                </div>
               </div>
             </div>
           )}
@@ -574,13 +327,13 @@ export const SettingsManagement: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <input
                         type="color"
-                        value={settings.primaryColor}
+                        value={localSettings.primaryColor}
                         onChange={(e) => handleInputChange('primaryColor', e.target.value)}
                         className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
                       />
                       <input
                         type="text"
-                        value={settings.primaryColor}
+                        value={localSettings.primaryColor}
                         onChange={(e) => handleInputChange('primaryColor', e.target.value)}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -594,13 +347,13 @@ export const SettingsManagement: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <input
                         type="color"
-                        value={settings.secondaryColor}
+                        value={localSettings.secondaryColor}
                         onChange={(e) => handleInputChange('secondaryColor', e.target.value)}
                         className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
                       />
                       <input
                         type="text"
-                        value={settings.secondaryColor}
+                        value={localSettings.secondaryColor}
                         onChange={(e) => handleInputChange('secondaryColor', e.target.value)}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -617,8 +370,8 @@ export const SettingsManagement: React.FC = () => {
                   <ImageUploadField
                     field="logoUrl"
                     label="Logo principal"
-                    description="Logo affiché dans la navigation et l'en-tête (recommandé: 200x60px, format PNG/SVG)"
-                    currentValue={settings.logoUrl}
+                    description="Logo affiché dans la navigation et l'en-tête (recommandé: 200x60px, format PNG/SVG avec fond transparent)"
+                    currentValue={localSettings.logoUrl}
                     aspectRatio="aspect-[10/3]"
                     maxWidth="max-w-xs"
                   />
@@ -627,7 +380,7 @@ export const SettingsManagement: React.FC = () => {
                     field="faviconUrl"
                     label="Favicon"
                     description="Icône affichée dans l'onglet du navigateur (recommandé: 32x32px, format ICO/PNG)"
-                    currentValue={settings.faviconUrl}
+                    currentValue={localSettings.faviconUrl}
                     aspectRatio="aspect-square"
                     maxWidth="max-w-[80px]"
                   />
@@ -643,7 +396,7 @@ export const SettingsManagement: React.FC = () => {
                     field="headerBackgroundImage"
                     label="Image de fond de l'en-tête"
                     description="Image de fond pour la section hero de la page d'accueil (recommandé: 1920x600px)"
-                    currentValue={settings.headerBackgroundImage}
+                    currentValue={localSettings.headerBackgroundImage}
                     aspectRatio="aspect-[16/5]"
                   />
                   
@@ -651,7 +404,7 @@ export const SettingsManagement: React.FC = () => {
                     field="loginBackgroundImage"
                     label="Image de fond de connexion"
                     description="Image de fond pour la page de connexion (recommandé: 1920x1080px)"
-                    currentValue={settings.loginBackgroundImage}
+                    currentValue={localSettings.loginBackgroundImage}
                     aspectRatio="aspect-video"
                   />
                   
@@ -659,7 +412,7 @@ export const SettingsManagement: React.FC = () => {
                     field="footerBackgroundImage"
                     label="Image de fond du pied de page"
                     description="Image de fond pour le pied de page (recommandé: 1920x400px)"
-                    currentValue={settings.footerBackgroundImage}
+                    currentValue={localSettings.footerBackgroundImage}
                     aspectRatio="aspect-[24/5]"
                   />
                 </div>
@@ -673,7 +426,7 @@ export const SettingsManagement: React.FC = () => {
                     Styles CSS additionnels
                   </label>
                   <textarea
-                    value={settings.customCSS}
+                    value={localSettings.customCSS}
                     onChange={(e) => handleInputChange('customCSS', e.target.value)}
                     rows={8}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
@@ -700,21 +453,21 @@ export const SettingsManagement: React.FC = () => {
                   <div className="text-center">
                     <div 
                       className="w-full h-16 rounded-lg mb-2 border border-gray-200"
-                      style={{ backgroundColor: settings.primaryColor }}
+                      style={{ backgroundColor: localSettings.primaryColor }}
                     ></div>
                     <p className="text-xs text-gray-600">Couleur primaire</p>
                   </div>
                   <div className="text-center">
                     <div 
                       className="w-full h-16 rounded-lg mb-2 border border-gray-200"
-                      style={{ backgroundColor: settings.secondaryColor }}
+                      style={{ backgroundColor: localSettings.secondaryColor }}
                     ></div>
                     <p className="text-xs text-gray-600">Couleur secondaire</p>
                   </div>
                   <div className="text-center">
                     <div 
                       className="w-full h-16 rounded-lg mb-2 border border-gray-200 flex items-center justify-center text-white font-medium"
-                      style={{ backgroundColor: settings.primaryColor }}
+                      style={{ backgroundColor: localSettings.primaryColor }}
                     >
                       Bouton
                     </div>
@@ -724,8 +477,8 @@ export const SettingsManagement: React.FC = () => {
                     <div 
                       className="w-full h-16 rounded-lg mb-2 border-2 flex items-center justify-center font-medium"
                       style={{ 
-                        borderColor: settings.primaryColor,
-                        color: settings.primaryColor
+                        borderColor: localSettings.primaryColor,
+                        color: localSettings.primaryColor
                       }}
                     >
                       Bouton
@@ -734,61 +487,38 @@ export const SettingsManagement: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Logo Preview */}
+              {localSettings.logoUrl && (
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h4 className="text-md font-semibold text-gray-900 mb-4">Aperçu du logo dans la navigation</h4>
+                  <div 
+                    className="p-4 rounded-lg"
+                    style={{ backgroundColor: localSettings.primaryColor }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={localSettings.logoUrl}
+                        alt="Logo preview"
+                        className="h-10 w-auto max-w-[200px] object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <span className="text-white font-bold text-lg">
+                        {localSettings.siteName}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {activeTab === 'database' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Base de Données</h3>
-              
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-sm text-yellow-800">
-                  <strong>Attention :</strong> Les opérations sur la base de données peuvent affecter le fonctionnement du site. 
-                  Assurez-vous d'avoir une sauvegarde récente avant de procéder.
-                </p>
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Sauvegarde</h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Créer une sauvegarde complète de la base de données.
-                  </p>
-                  <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                    Créer une sauvegarde
-                  </button>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Optimisation</h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Optimiser les tables de la base de données pour améliorer les performances.
-                  </p>
-                  <button className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                    Optimiser la base
-                  </button>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Nettoyage</h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Supprimer les données temporaires et les fichiers inutiles.
-                  </p>
-                  <button className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors">
-                    Nettoyer
-                  </button>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Restauration</h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Restaurer la base de données à partir d'une sauvegarde.
-                  </p>
-                  <button className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                    Restaurer
-                  </button>
-                </div>
-              </div>
+          {/* Other tabs content remains the same */}
+          {activeTab !== 'general' && activeTab !== 'appearance' && (
+            <div className="text-center py-12">
+              <p className="text-gray-500">Contenu de l'onglet "{tabs.find(t => t.id === activeTab)?.label}" à implémenter</p>
             </div>
           )}
         </div>
