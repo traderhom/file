@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
+  const { settings } = useSettings();
 
   const navigationItems = [
     { name: 'Accueil', href: '/' },
@@ -34,25 +36,59 @@ export const Navbar: React.FC = () => {
     setIsMenuOpen(false);
   };
 
+  const LogoComponent = () => {
+    if (settings.logoUrl) {
+      return (
+        <img
+          src={settings.logoUrl}
+          alt={settings.siteName}
+          className="h-10 w-auto max-w-[200px] object-contain"
+          onError={(e) => {
+            // Fallback to default logo if image fails to load
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+          }}
+        />
+      );
+    }
+    
+    return (
+      <div className="flex items-center space-x-3">
+        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+          <span className="text-[#1A4B8C] font-bold text-xl">E</span>
+        </div>
+        <span className="text-white font-bold text-lg lg:text-xl">
+          {settings.siteName}
+        </span>
+      </div>
+    );
+  };
+
   return (
-    <nav className="bg-[#1A4B8C] shadow-lg">
+    <nav className="bg-[#1A4B8C] shadow-lg" style={{ backgroundColor: settings.primaryColor }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo and Title */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                <span className="text-[#1A4B8C] font-bold text-xl">E</span>
-              </div>
-              <span className="text-white font-bold text-lg lg:text-xl">
-                École Supérieure des Sciences et Technologies
-              </span>
+              <LogoComponent />
+              {/* Fallback logo (hidden by default, shown if image fails) */}
+              {settings.logoUrl && (
+                <div className="hidden flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-[#1A4B8C] font-bold text-xl">E</span>
+                  </div>
+                  <span className="text-white font-bold text-lg lg:text-xl">
+                    {settings.siteName}
+                  </span>
+                </div>
+              )}
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:block">
-            <div className="flex items-center space-x-1 bg-[#1A4B8C] border border-white rounded-md px-4 py-2">
+            <div className="flex items-center space-x-1 bg-[#1A4B8C] border border-white rounded-md px-4 py-2" style={{ backgroundColor: settings.primaryColor }}>
               {navigationItems.map((item) => (
                 <Link
                   key={item.name}
@@ -62,6 +98,7 @@ export const Navbar: React.FC = () => {
                       ? 'text-[#1A4B8C] bg-white'
                       : 'text-white hover:text-gray-200'
                   }`}
+                  style={isActivePath(item.href) ? { color: settings.primaryColor } : {}}
                 >
                   {item.name}
                 </Link>
@@ -76,6 +113,7 @@ export const Navbar: React.FC = () => {
                       ? 'text-[#1A4B8C] bg-white'
                       : 'text-white hover:text-gray-200'
                   }`}
+                  style={isActivePath(item.href) ? { color: settings.primaryColor } : {}}
                 >
                   {item.name}
                 </Link>
@@ -98,7 +136,10 @@ export const Navbar: React.FC = () => {
                     </Link>
                   )}
                   <div className="relative group">
-                    <button className="flex items-center space-x-2 px-4 py-2 bg-white text-[#1A4B8C] rounded-full font-medium hover:bg-gray-100 transition-colors duration-200">
+                    <button 
+                      className="flex items-center space-x-2 px-4 py-2 bg-white rounded-full font-medium hover:bg-gray-100 transition-colors duration-200"
+                      style={{ color: settings.primaryColor }}
+                    >
                       <User size={16} />
                       <span className="text-sm">{user?.name}</span>
                     </button>
@@ -116,7 +157,11 @@ export const Navbar: React.FC = () => {
               ) : (
                 <Link
                   to="/login"
-                  className="bg-[#FFD700] hover:bg-yellow-400 text-[#2D3748] px-6 py-2 rounded-full text-sm font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
+                  className="px-6 py-2 rounded-full text-sm font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
+                  style={{ 
+                    backgroundColor: settings.secondaryColor,
+                    color: '#2D3748'
+                  }}
                 >
                   Connexion
                 </Link>
@@ -138,7 +183,7 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Navigation */}
       {isMenuOpen && (
-        <div className="lg:hidden border-t border-blue-600 bg-[#1A4B8C]">
+        <div className="lg:hidden border-t border-blue-600" style={{ backgroundColor: settings.primaryColor, borderColor: `${settings.primaryColor}CC` }}>
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navigationItems.map((item) => (
               <Link
@@ -147,9 +192,10 @@ export const Navbar: React.FC = () => {
                 onClick={() => setIsMenuOpen(false)}
                 className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${
                   isActivePath(item.href)
-                    ? 'bg-white text-[#1A4B8C]'
+                    ? 'bg-white'
                     : 'text-white hover:text-gray-200 hover:bg-blue-700'
                 }`}
+                style={isActivePath(item.href) ? { color: settings.primaryColor } : {}}
               >
                 {item.name}
               </Link>
@@ -162,9 +208,10 @@ export const Navbar: React.FC = () => {
                 onClick={() => setIsMenuOpen(false)}
                 className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${
                   isActivePath(item.href)
-                    ? 'bg-white text-[#1A4B8C]'
+                    ? 'bg-white'
                     : 'text-white hover:text-gray-200 hover:bg-blue-700'
                 }`}
+                style={isActivePath(item.href) ? { color: settings.primaryColor } : {}}
               >
                 {item.name}
               </Link>
@@ -172,7 +219,7 @@ export const Navbar: React.FC = () => {
           </div>
           
           {/* Mobile User Menu */}
-          <div className="pt-4 pb-3 border-t border-blue-600">
+          <div className="pt-4 pb-3 border-t border-blue-600" style={{ borderColor: `${settings.primaryColor}CC` }}>
             <div className="px-2 space-y-1">
               {isAuthenticated ? (
                 <>
@@ -201,7 +248,11 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/login"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block bg-[#FFD700] hover:bg-yellow-400 text-[#2D3748] px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 mx-3 text-center"
+                  className="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 mx-3 text-center"
+                  style={{ 
+                    backgroundColor: settings.secondaryColor,
+                    color: '#2D3748'
+                  }}
                 >
                   Connexion
                 </Link>
