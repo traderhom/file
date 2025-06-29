@@ -26,6 +26,7 @@ import { useMessaging, Message, Conversation } from '../contexts/MessagingContex
 import { Navbar } from '../components/Navbar';
 import { CallModal } from '../components/messaging/CallModal';
 import { NewConversationModal } from '../components/messaging/NewConversationModal';
+import { StickerPicker } from '../components/messaging/StickerPicker';
 
 export const MessagingPage: React.FC = () => {
   const { user } = useAuth();
@@ -51,6 +52,7 @@ export const MessagingPage: React.FC = () => {
   const [editContent, setEditContent] = useState('');
   const [showConversationInfo, setShowConversationInfo] = useState(false);
   const [isUserTyping, setIsUserTyping] = useState(false);
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
   
   // Call states
   const [showCallModal, setShowCallModal] = useState(false);
@@ -61,6 +63,7 @@ export const MessagingPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
+  const stickerPickerRef = useRef<HTMLDivElement>(null);
 
   const currentConversation = conversations.find(c => c.id === activeConversation);
   const currentMessages = activeConversation ? getConversationMessages(activeConversation) : [];
@@ -95,6 +98,23 @@ export const MessagingPage: React.FC = () => {
     }
   }, [newMessage, activeConversation, isUserTyping, setTyping]);
 
+  // Close sticker picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (stickerPickerRef.current && !stickerPickerRef.current.contains(event.target as Node)) {
+        setShowStickerPicker(false);
+      }
+    };
+
+    if (showStickerPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStickerPicker]);
+
   // Simulate incoming call (demo)
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -124,6 +144,13 @@ export const MessagingPage: React.FC = () => {
       setNewMessage('');
       setIsUserTyping(false);
       setTyping(activeConversation, false);
+    }
+  };
+
+  const handleStickerSelect = (sticker: { id: string; emoji: string; name: string; category: string }) => {
+    if (activeConversation) {
+      sendMessage(activeConversation, sticker.emoji, 'text');
+      setShowStickerPicker(false);
     }
   };
 
@@ -489,7 +516,7 @@ export const MessagingPage: React.FC = () => {
               </div>
 
               {/* Message Input */}
-              <div className="border-t bg-white p-4">
+              <div className="border-t bg-white p-4 relative">
                 <form onSubmit={handleSendMessage} className="flex items-center space-x-4">
                   <input
                     type="file"
@@ -516,12 +543,25 @@ export const MessagingPage: React.FC = () => {
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                   
-                  <button
-                    type="button"
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-                  >
-                    <Smile className="h-5 w-5" />
-                  </button>
+                  <div className="relative" ref={stickerPickerRef}>
+                    <button
+                      type="button"
+                      onClick={() => setShowStickerPicker(!showStickerPicker)}
+                      className={`p-2 rounded-full transition-colors ${
+                        showStickerPicker 
+                          ? 'bg-blue-100 text-blue-600' 
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Smile className="h-5 w-5" />
+                    </button>
+                    
+                    <StickerPicker
+                      isOpen={showStickerPicker}
+                      onClose={() => setShowStickerPicker(false)}
+                      onStickerSelect={handleStickerSelect}
+                    />
+                  </div>
                   
                   <button
                     type="submit"
