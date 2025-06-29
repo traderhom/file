@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Heart, Smile, ThumbsUp, Star, Coffee, Fire, Zap, Music, Camera } from 'lucide-react';
+import { X, Heart, Smile, ThumbsUp, Star, Coffee, Siren as Fire, Zap, Music, Camera } from 'lucide-react';
 
 interface StickerPickerProps {
   isOpen: boolean;
