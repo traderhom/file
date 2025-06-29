@@ -17,11 +17,15 @@ import {
   File,
   X,
   UserPlus,
-  Settings
+  Settings,
+  PhoneCall,
+  VideoIcon
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useMessaging, Message, Conversation } from '../contexts/MessagingContext';
 import { Navbar } from '../components/Navbar';
+import { CallModal } from '../components/messaging/CallModal';
+import { NewConversationModal } from '../components/messaging/NewConversationModal';
 
 export const MessagingPage: React.FC = () => {
   const { user } = useAuth();
@@ -47,6 +51,12 @@ export const MessagingPage: React.FC = () => {
   const [editContent, setEditContent] = useState('');
   const [showConversationInfo, setShowConversationInfo] = useState(false);
   const [isUserTyping, setIsUserTyping] = useState(false);
+  
+  // Call states
+  const [showCallModal, setShowCallModal] = useState(false);
+  const [callType, setCallType] = useState<'audio' | 'video'>('audio');
+  const [isIncomingCall, setIsIncomingCall] = useState(false);
+  const [callParticipant, setCallParticipant] = useState<any>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -84,6 +94,28 @@ export const MessagingPage: React.FC = () => {
       setTyping(activeConversation!, false);
     }
   }, [newMessage, activeConversation, isUserTyping, setTyping]);
+
+  // Simulate incoming call (demo)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (conversations.length > 0 && !showCallModal) {
+        const randomConv = conversations[Math.floor(Math.random() * conversations.length)];
+        if (randomConv.participants.length > 0) {
+          setCallParticipant({
+            id: randomConv.participants[0].id,
+            name: randomConv.participants[0].name,
+            avatar: randomConv.participants[0].avatar,
+            isOnline: randomConv.participants[0].isOnline
+          });
+          setCallType(Math.random() > 0.5 ? 'video' : 'audio');
+          setIsIncomingCall(true);
+          setShowCallModal(true);
+        }
+      }
+    }, 30000); // Simulate incoming call after 30 seconds
+
+    return () => clearTimeout(timer);
+  }, [conversations, showCallModal]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,6 +162,27 @@ export const MessagingPage: React.FC = () => {
     if (activeConversation && confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
       deleteMessage(activeConversation, messageId);
     }
+  };
+
+  const handleStartCall = (type: 'audio' | 'video') => {
+    if (currentConversation && currentConversation.participants.length > 0) {
+      setCallParticipant({
+        id: currentConversation.participants[0].id,
+        name: currentConversation.participants[0].name,
+        avatar: currentConversation.participants[0].avatar,
+        isOnline: currentConversation.participants[0].isOnline
+      });
+      setCallType(type);
+      setIsIncomingCall(false);
+      setShowCallModal(true);
+    }
+  };
+
+  const handleCreateConversation = (participants: string[], name?: string, type?: 'individual' | 'group', conversationType?: string) => {
+    const newConvId = createConversation(participants, name, type);
+    setActiveConversation(newConvId);
+    setShowNewConversation(false);
+    return newConvId;
   };
 
   const formatTime = (date: Date) => {
@@ -269,130 +322,6 @@ export const MessagingPage: React.FC = () => {
     );
   };
 
-  const NewConversationModal = () => {
-    const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-    const [conversationName, setConversationName] = useState('');
-    const [conversationType, setConversationType] = useState<'individual' | 'group'>('individual');
-
-    const mockUsers = [
-      { id: '1', name: 'Prof. Marie Dubois', email: 'marie.dubois@esst.edu', avatar: 'MD' },
-      { id: '2', name: 'Thomas Lambert', email: 'thomas.lambert@student.esst.edu', avatar: 'TL' },
-      { id: '3', name: 'Sophie Martin', email: 'sophie.martin@student.esst.edu', avatar: 'SM' },
-      { id: '4', name: 'Alex Chen', email: 'alex.chen@student.esst.edu', avatar: 'AC' },
-      { id: '5', name: 'Dr. Jean Martin', email: 'jean.martin@esst.edu', avatar: 'JM' }
-    ];
-
-    const handleCreateConversation = () => {
-      if (selectedUsers.length > 0) {
-        const name = conversationType === 'group' ? conversationName : undefined;
-        const newConvId = createConversation(selectedUsers, name, conversationType);
-        setActiveConversation(newConvId);
-        setShowNewConversation(false);
-        setSelectedUsers([]);
-        setConversationName('');
-      }
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Nouvelle conversation</h3>
-            <button
-              onClick={() => setShowNewConversation(false)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Type de conversation
-              </label>
-              <select
-                value={conversationType}
-                onChange={(e) => setConversationType(e.target.value as 'individual' | 'group')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="individual">Individuelle</option>
-                <option value="group">Groupe</option>
-              </select>
-            </div>
-
-            {conversationType === 'group' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nom du groupe
-                </label>
-                <input
-                  type="text"
-                  value={conversationName}
-                  onChange={(e) => setConversationName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Nom du groupe"
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Participants
-              </label>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {mockUsers.map((user) => (
-                  <label key={user.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
-                    <input
-                      type={conversationType === 'individual' ? 'radio' : 'checkbox'}
-                      name={conversationType === 'individual' ? 'participant' : undefined}
-                      checked={selectedUsers.includes(user.id)}
-                      onChange={(e) => {
-                        if (conversationType === 'individual') {
-                          setSelectedUsers(e.target.checked ? [user.id] : []);
-                        } else {
-                          setSelectedUsers(prev =>
-                            e.target.checked
-                              ? [...prev, user.id]
-                              : prev.filter(id => id !== user.id)
-                          );
-                        }
-                      }}
-                      className="rounded"
-                    />
-                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                      {user.avatar}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{user.name}</p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex space-x-3 mt-6">
-            <button
-              onClick={() => setShowNewConversation(false)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Annuler
-            </button>
-            <button
-              onClick={handleCreateConversation}
-              disabled={selectedUsers.length === 0}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              Créer
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -513,10 +442,18 @@ export const MessagingPage: React.FC = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+                    <button 
+                      onClick={() => handleStartCall('audio')}
+                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                      title="Appel audio"
+                    >
                       <Phone className="h-5 w-5" />
                     </button>
-                    <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+                    <button 
+                      onClick={() => handleStartCall('video')}
+                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                      title="Appel vidéo"
+                    >
                       <Video className="h-5 w-5" />
                     </button>
                     <button
@@ -640,6 +577,24 @@ export const MessagingPage: React.FC = () => {
                 <p className="text-sm text-gray-600">{getOnlineStatus(currentConversation)}</p>
               </div>
 
+              {/* Quick Actions */}
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => handleStartCall('audio')}
+                  className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <Phone className="h-6 w-6 text-gray-600 mb-2" />
+                  <span className="text-sm text-gray-700">Appeler</span>
+                </button>
+                <button 
+                  onClick={() => handleStartCall('video')}
+                  className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <Video className="h-6 w-6 text-gray-600 mb-2" />
+                  <span className="text-sm text-gray-700">Vidéo</span>
+                </button>
+              </div>
+
               {/* Participants */}
               <div>
                 <h5 className="text-sm font-semibold text-gray-900 mb-3">
@@ -693,7 +648,30 @@ export const MessagingPage: React.FC = () => {
       </div>
 
       {/* New Conversation Modal */}
-      {showNewConversation && <NewConversationModal />}
+      <NewConversationModal
+        isOpen={showNewConversation}
+        onClose={() => setShowNewConversation(false)}
+        onCreateConversation={handleCreateConversation}
+      />
+
+      {/* Call Modal */}
+      <CallModal
+        isOpen={showCallModal}
+        onClose={() => {
+          setShowCallModal(false);
+          setIsIncomingCall(false);
+          setCallParticipant(null);
+        }}
+        callType={callType}
+        isIncoming={isIncomingCall}
+        participant={callParticipant}
+        onAccept={() => setIsIncomingCall(false)}
+        onDecline={() => {
+          setShowCallModal(false);
+          setIsIncomingCall(false);
+          setCallParticipant(null);
+        }}
+      />
     </div>
   );
 };
