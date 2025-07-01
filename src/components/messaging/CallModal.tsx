@@ -49,6 +49,7 @@ export const CallModal: React.FC<CallModalProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
 
+
   // Simulate call connection
   useEffect(() => {
     if (isOpen && !isIncoming) {
@@ -60,9 +61,15 @@ export const CallModal: React.FC<CallModalProps> = ({
     }
   }, [isOpen, isIncoming]);
 
+  // Handlers for not-yet-implemented buttons
+  // TODO: Remplacer par une vraie logique métier (ouvrir modale, afficher chat, etc.)
+  const handleNotImplemented = (feature: string) => {
+    alert(`Fonctionnalité "${feature}" à implémenter (ouvrir modale, afficher chat, etc.)`);
+  };
+
   // Call duration timer
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isConnected) {
       interval = setInterval(() => {
         setCallDuration(prev => prev + 1);
@@ -254,23 +261,36 @@ export const CallModal: React.FC<CallModalProps> = ({
                 {isSpeakerOn ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
               </button>
 
+
               {/* Chat */}
-              <button className="w-12 h-12 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center text-white transition-colors">
+              <button
+                onClick={() => handleNotImplemented('Chat')}
+                className="w-12 h-12 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center text-white transition-colors"
+              >
                 <MessageCircle className="h-5 w-5" />
               </button>
 
               {/* Add participants (for group calls) */}
-              <button className="w-12 h-12 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center text-white transition-colors">
+              <button
+                onClick={() => handleNotImplemented('Ajouter des participants')}
+                className="w-12 h-12 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center text-white transition-colors"
+              >
                 <Users className="h-5 w-5" />
               </button>
 
               {/* Settings */}
-              <button className="w-12 h-12 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center text-white transition-colors">
+              <button
+                onClick={() => handleNotImplemented('Paramètres')}
+                className="w-12 h-12 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center text-white transition-colors"
+              >
                 <Settings className="h-5 w-5" />
               </button>
 
               {/* More options */}
-              <button className="w-12 h-12 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center text-white transition-colors">
+              <button
+                onClick={() => handleNotImplemented('Plus d\'options')}
+                className="w-12 h-12 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center text-white transition-colors"
+              >
                 <MoreVertical className="h-5 w-5" />
               </button>
 

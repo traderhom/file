@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { 
   Edit, 
   Users, 
@@ -9,13 +8,22 @@ import {
   MessageCircle,
   Settings
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
 import { Navbar } from '../components/Navbar';
 
 export const ProjectDetailPage: React.FC = () => {
-  const { id } = useParams();
-  const { user } = useAuth();
+  // const { id } = useParams();
   const [activeTab, setActiveTab] = useState('overview');
+  const [members, setMembers] = useState<Array<any>>([]);
+
+  // Utiliser la vraie route backend pour les membres de projet
+  useEffect(() => {
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(data => {
+        setMembers(data);
+      })
+      .catch(() => {});
+  }, []);
 
   const project = {
     id: '1',
@@ -26,12 +34,7 @@ export const ProjectDetailPage: React.FC = () => {
     progress: 50,
     startDate: '16/04/2025',
     endDate: '16/06/2025',
-    members: [
-      { id: '1', name: 'John Doe', role: 'Responsable', avatar: 'JD', color: 'bg-blue-600' },
-      { id: '2', name: 'Marie Martin', role: 'Membre', avatar: 'MM', color: 'bg-teal-600' },
-      { id: '3', name: 'Alex Dubois', role: 'Membre', avatar: 'AD', color: 'bg-orange-600' },
-      { id: '4', name: 'Sophie Laurent', role: 'Membre', avatar: 'SL', color: 'bg-purple-600' }
-    ],
+    members: [], // À remplacer par des membres chargés dynamiquement depuis l'API
     milestones: [
       { id: '1', title: 'Analyse et conception', deadline: '30/04/2025', status: 'completed' },
       { id: '2', title: 'Développement des modèles et backend', deadline: '20/05/2025', status: 'active' },
@@ -206,7 +209,7 @@ export const ProjectDetailPage: React.FC = () => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Équipe</h3>
                     
                     <div className="space-y-3">
-                      {project.members.map((member) => (
+                      {members.map((member) => (
                         <div key={member.id} className="flex items-center space-x-3">
                           <div className={`w-9 h-9 ${member.color} rounded-full flex items-center justify-center text-white text-sm font-medium`}>
                             {member.avatar}

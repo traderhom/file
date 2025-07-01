@@ -79,7 +79,10 @@ export const FormationPage: React.FC = () => {
               Découvrez nos programmes de formation innovants conçus pour préparer les leaders technologiques de demain.
             </p>
             <div className="flex flex-wrap gap-4">
-              <button className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
+              <button
+                className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+                onClick={() => window.location.href = '/admission'}
+              >
                 Candidater maintenant
               </button>
               <button className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
@@ -244,7 +247,10 @@ export const FormationPage: React.FC = () => {
             Donnez une nouvelle dimension à votre avenir avec nos formations d'excellence.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-yellow-500 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors">
+            <button
+              className="bg-yellow-500 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors"
+              onClick={() => window.location.href = '/admission'}
+            >
               Candidater maintenant
             </button>
             <button className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition-colors">

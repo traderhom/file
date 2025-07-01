@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { BookOpen, Clock, Users, Star, Play, Download, CheckCircle } from 'lucide-react';
+import { useCourseStats, useVisitorStats } from '../hooks/useRealTimeStats';
+import { BookOpen, Users, Star, Play, Download, CheckCircle } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { useCourses } from '../contexts/CoursesContext';
 
@@ -8,6 +9,8 @@ export const CoursPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const courses = getActiveCourses();
+  const { courseStats } = useCourseStats();
+  const { visitorStats } = useVisitorStats();
 
   const categories = [
     { id: 'all', label: 'Tous les cours' },
@@ -63,16 +66,16 @@ export const CoursPage: React.FC = () => {
             </p>
             <div className="grid md:grid-cols-3 gap-6 text-center">
               <div>
-                <div className="text-3xl font-bold">{courses.length}+</div>
+                <div className="text-3xl font-bold">{courseStats?.totalCourses ?? '-'}</div>
                 <div className="text-indigo-200">Cours disponibles</div>
               </div>
               <div>
-                <div className="text-3xl font-bold">{courses.reduce((sum, course) => sum + course.students, 0)}+</div>
-                <div className="text-indigo-200">Étudiants actifs</div>
+                <div className="text-3xl font-bold">{courseStats?.totalEnrollments ?? '-'}</div>
+                <div className="text-indigo-200">Étudiants inscrits</div>
               </div>
               <div>
-                <div className="text-3xl font-bold">95%</div>
-                <div className="text-indigo-200">Taux de satisfaction</div>
+                <div className="text-3xl font-bold">{visitorStats?.monthlyVisitors ?? '-'}</div>
+                <div className="text-indigo-200">Visiteurs/mois</div>
               </div>
             </div>
           </div>

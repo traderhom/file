@@ -1,4 +1,5 @@
 import React from 'react';
+import { useUserStats, useProjectStats, useCourseStats, useVisitorStats } from '../hooks/useRealTimeStats';
 import { Link } from 'react-router-dom';
 import { BookOpen, Calendar, Users, GraduationCap, FlaskRound as Flask, Newspaper, ChevronRight, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -34,6 +35,11 @@ export const HomePage: React.FC = () => {
     title: 'Bienvenue à l\'ESST',
     description: 'Découvrez notre plateforme collaborative dédiée à l\'excellence académique et à la recherche innovante.'
   };
+
+  const { userStats } = useUserStats();
+  const { projectStats } = useProjectStats();
+  const { courseStats } = useCourseStats();
+  const { visitorStats } = useVisitorStats();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -220,24 +226,24 @@ export const HomePage: React.FC = () => {
           </div>
         )}
 
-        {/* Statistics Section */}
+        {/* Statistics Section dynamique */}
         <div className="mt-12 bg-gradient-to-r from-blue-900 to-blue-800 rounded-xl p-8 text-white">
           <h3 className="text-2xl font-bold text-center mb-8">L'ESST en chiffres</h3>
           <div className="grid md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="text-4xl font-bold mb-2">1,245</div>
+              <div className="text-4xl font-bold mb-2">{userStats?.totalUsers ?? '-'}</div>
               <div className="text-blue-200">Étudiants</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold mb-2">89</div>
+              <div className="text-4xl font-bold mb-2">{projectStats?.activeProjects ?? '-'}</div>
               <div className="text-blue-200">Projets actifs</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold mb-2">24</div>
+              <div className="text-4xl font-bold mb-2">{courseStats?.totalCourses ?? '-'}</div>
               <div className="text-blue-200">Formations</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold mb-2">12,890</div>
+              <div className="text-4xl font-bold mb-2">{visitorStats?.monthlyVisitors ?? '-'}</div>
               <div className="text-blue-200">Visiteurs/mois</div>
             </div>
           </div>

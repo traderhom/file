@@ -1,37 +1,28 @@
-import React from 'react';
-import { FlaskRound as Flask, Users, BookOpen, Award, ExternalLink, Calendar, MapPin } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Award, ExternalLink, Calendar, MapPin } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 
 export const RecherchePage: React.FC = () => {
-  const laboratories = [
-    {
-      id: '1',
-      name: 'Laboratoire d\'Intelligence Artificielle',
-      director: 'Prof. Marie Dubois',
-      members: 25,
-      focus: 'Machine Learning, Deep Learning, Computer Vision',
-      projects: 12,
-      image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=400'
-    },
-    {
-      id: '2',
-      name: 'Centre de Cybersécurité',
-      director: 'Dr. Jean Martin',
-      members: 18,
-      focus: 'Sécurité des réseaux, Cryptographie, Forensique numérique',
-      projects: 8,
-      image: 'https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=400'
-    },
-    {
-      id: '3',
-      name: 'Laboratoire de Robotique',
-      director: 'Prof. Alex Chen',
-      members: 22,
-      focus: 'Robotique autonome, IoT, Systèmes embarqués',
-      projects: 15,
-      image: 'https://images.pexels.com/photos/8386434/pexels-photo-8386434.jpeg?auto=compress&cs=tinysrgb&w=400'
-    }
-  ];
+  const [laboratories, setLaboratories] = useState<Array<any>>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Utiliser la vraie route backend pour les laboratoires
+  useEffect(() => {
+    fetch('/api/project-categories')
+      .then(res => res.json())
+      .then(data => {
+        setLaboratories(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  // Typage exemple (à adapter selon votre modèle réel)
+  // interface Laboratory {
+  //   _id: string;
+  //   name: string;
+  //   // Ajoutez les autres champs selon votre schéma MongoDB
+  // }
 
   const publications = [
     {
@@ -104,6 +95,8 @@ export const RecherchePage: React.FC = () => {
       type: 'Événement'
     }
   ];
+
+  if (loading) return <div>Chargement des laboratoires...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">

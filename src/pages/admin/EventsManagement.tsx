@@ -198,7 +198,14 @@ export const EventsManagement: React.FC = () => {
                     >
                       <Edit className="h-4 w-4" />
                     </button>
-                    <button className="text-green-600 hover:text-green-900 p-2" title="Aperçu">
+                    <button
+                      className="text-green-600 hover:text-green-900 p-2"
+                      title="Aperçu"
+                      onClick={() => {
+                        // TODO: ouvrir une modale ou naviguer vers la page de détail de l'événement
+                        alert('Navigation vers la page de détail de l\'événement (fonctionnalité à implémenter)');
+                      }}
+                    >
                       <Eye className="h-4 w-4" />
                     </button>
                     <button 

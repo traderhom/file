@@ -1,20 +1,31 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { usePages } from '../contexts/PageContext';
 import { Navbar } from '../components/Navbar';
 
 export const DynamicPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { getPageBySlug } = usePages();
+  const [page, setPage] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!slug) {
+  useEffect(() => {
+    if (!slug) return;
+    setLoading(true);
+    fetch(`/api/pages`)
+      .then(res => res.json())
+      .then((pages) => {
+        const found = pages.find((p: any) => p.slug === slug && p.status === 'published');
+        setPage(found || null);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [slug]);
+
+  if (!slug || (!loading && !page)) {
     return <Navigate to="/" replace />;
   }
-
-  const page = getPageBySlug(slug);
-
-  if (!page || page.status !== 'published') {
-    return <Navigate to="/" replace />;
+  if (loading) {
+    return <div>Chargement...</div>;
   }
 
   const renderContent = (content: string) => {

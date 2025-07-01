@@ -5,23 +5,18 @@ import {
   Send, 
   Paperclip, 
   Smile, 
-  MoreVertical, 
   Phone, 
   Video, 
   Info,
   Edit3,
   Trash2,
-  Reply,
   Download,
-  Image as ImageIcon,
   File,
   X,
   UserPlus,
-  Settings,
-  PhoneCall,
-  VideoIcon
+  Settings
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+// import { useAuth } from '../contexts/AuthContext';
 import { useMessaging, Message, Conversation } from '../contexts/MessagingContext';
 import { Navbar } from '../components/Navbar';
 import { CallModal } from '../components/messaging/CallModal';
@@ -29,7 +24,7 @@ import { NewConversationModal } from '../components/messaging/NewConversationMod
 import { StickerPicker } from '../components/messaging/StickerPicker';
 
 export const MessagingPage: React.FC = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const {
     conversations,
     activeConversation,
@@ -47,7 +42,7 @@ export const MessagingPage: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewConversation, setShowNewConversation] = useState(false);
-  const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
+  // const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [editingMessage, setEditingMessage] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [showConversationInfo, setShowConversationInfo] = useState(false);
@@ -205,7 +200,7 @@ export const MessagingPage: React.FC = () => {
     }
   };
 
-  const handleCreateConversation = (participants: string[], name?: string, type?: 'individual' | 'group', conversationType?: string) => {
+  const handleCreateConversation = (participants: string[], name?: string, type?: 'individual' | 'group', _conversationType?: string) => {
     const newConvId = createConversation(participants, name, type);
     setActiveConversation(newConvId);
     setShowNewConversation(false);
@@ -500,7 +495,7 @@ export const MessagingPage: React.FC = () => {
                 ))}
                 
                 {/* Typing indicator */}
-                {isTyping[activeConversation]?.filter(id => id !== 'current').length > 0 && (
+                {activeConversation && isTyping[activeConversation]?.filter((id: string) => id !== 'current').length > 0 && (
                   <div className="flex justify-start">
                     <div className="bg-gray-200 px-4 py-2 rounded-lg">
                       <div className="flex space-x-1">
@@ -660,7 +655,14 @@ export const MessagingPage: React.FC = () => {
                 </div>
                 
                 {currentConversation.type === 'group' && (
-                  <button className="w-full mt-3 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center">
+                  <button
+                    className="w-full mt-3 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center"
+                    onClick={() => {
+                      // TODO: ouvrir une modale pour sélectionner un utilisateur à ajouter
+                      // Exemple d'appel métier : addParticipant(currentConversation.id, participantId)
+                      alert('Sélectionnez un utilisateur à ajouter (fonctionnalité à implémenter)');
+                    }}
+                  >
                     <UserPlus className="h-4 w-4 mr-2" />
                     Ajouter un participant
                   </button>
@@ -669,15 +671,33 @@ export const MessagingPage: React.FC = () => {
 
               {/* Actions */}
               <div className="space-y-2">
-                <button className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center">
+                <button
+                  className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center"
+                  onClick={() => {
+                    // TODO: ouvrir une modale ou un champ de recherche pour filtrer les messages
+                    alert('Recherche dans la conversation (fonctionnalité à implémenter)');
+                  }}
+                >
                   <Search className="h-4 w-4 mr-3" />
                   Rechercher dans la conversation
                 </button>
-                <button className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center">
+                <button
+                  className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center"
+                  onClick={() => {
+                    // TODO: ouvrir une modale de paramètres de la conversation
+                    alert('Paramètres de la conversation (fonctionnalité à implémenter)');
+                  }}
+                >
                   <Settings className="h-4 w-4 mr-3" />
                   Paramètres de la conversation
                 </button>
-                <button className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center">
+                <button
+                  className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center"
+                  onClick={() => {
+                    // TODO: appeler la logique de suppression de conversation
+                    alert('Suppression de la conversation (fonctionnalité à implémenter)');
+                  }}
+                >
                   <Trash2 className="h-4 w-4 mr-3" />
                   Supprimer la conversation
                 </button>

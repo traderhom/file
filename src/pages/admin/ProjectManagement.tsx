@@ -1,28 +1,103 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ProjectConfigService } from '../../services/ProjectConfigService';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Download, Archive, Trash2, Edit, X, Eye, Users, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
 import { ProjectEditor } from '../../components/projects/ProjectEditor';
 import { useProjects } from '../../contexts/ProjectsContext';
 
 export const ProjectManagement: React.FC = () => {
   const { projects, updateProject, createProject, deleteProject } = useProjects();
+  const navigate = useNavigate();
 
-  const [categories] = useState([
-    'Développement Web',
-    'IA & Machine Learning',
-    'Data Science',
-    'Cybersécurité',
-    'Électronique',
-    'Recherche',
-    'Formation',
-    'Innovation'
-  ]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [statuses, setStatuses] = useState<{ id: string, label: string, color: string }[]>([]);
+  const [loadingConfig, setLoadingConfig] = useState(true);
+  const [configError, setConfigError] = useState('');
 
-  const [statuses] = useState([
-    { id: 'active', label: 'Actif', color: 'bg-green-500' },
-    { id: 'draft', label: 'Brouillon', color: 'bg-yellow-500' },
-    { id: 'completed', label: 'Terminé', color: 'bg-blue-500' },
-    { id: 'cancelled', label: 'Annulé', color: 'bg-red-500' }
-  ]);
+  // Charger catégories/statuts au montage
+  useEffect(() => {
+    setLoadingConfig(true);
+    setConfigError('');
+    Promise.all([
+      ProjectConfigService.getCategories(),
+      ProjectConfigService.getStatuses()
+    ])
+      .then(([cats, stats]) => {
+        setCategories(cats.map((c: any) => c.name));
+        setStatuses(stats);
+      })
+      .catch(() => setConfigError('Erreur de chargement des catégories/statuts'))
+      .finally(() => setLoadingConfig(false));
+  }, []);
+
+  // State for new category and status inputs
+  const [newCategory, setNewCategory] = useState('');
+  const [newStatus, setNewStatus] = useState('');
+  const [newStatusColor, setNewStatusColor] = useState('bg-green-500');
+  const [statusError, setStatusError] = useState('');
+
+  // Add new category
+  const handleAddCategory = async () => {
+    if (!newCategory.trim()) return;
+    if (categories.includes(newCategory.trim())) return;
+    try {
+      const cat = await ProjectConfigService.addCategory(newCategory.trim());
+      setCategories([...categories, cat.name]);
+      setNewCategory('');
+    } catch (e) {
+      setConfigError('Erreur lors de l\'ajout de la catégorie');
+    }
+  };
+
+  // Remove category
+  const handleRemoveCategory = async (cat: string) => {
+    try {
+      // On doit trouver l'id de la catégorie (requête à l'API pour tout récupérer)
+      const all = await ProjectConfigService.getCategories();
+      const found = all.find((c: any) => c.name === cat);
+      if (!found) return;
+      await ProjectConfigService.removeCategory(found._id);
+      setCategories(categories.filter(c => c !== cat));
+    } catch (e) {
+      setConfigError('Erreur lors de la suppression de la catégorie');
+    }
+  };
+
+  // Add new status
+  const handleAddStatus = async () => {
+    setStatusError('');
+    if (!newStatus.trim()) {
+      setStatusError('Le nom du statut est requis.');
+      return;
+    }
+    if (statuses.some(s => s.label.toLowerCase() === newStatus.trim().toLowerCase())) {
+      setStatusError('Ce statut existe déjà.');
+      return;
+    }
+    const id = newStatus.trim().toLowerCase().replace(/\s+/g, '-');
+    try {
+      const status = await ProjectConfigService.addStatus({ id, label: newStatus.trim(), color: newStatusColor });
+      setStatuses([...statuses, status]);
+      setNewStatus('');
+      setNewStatusColor('bg-green-500');
+      setShowAddStatusModal(false);
+    } catch (e) {
+      setStatusError('Erreur lors de l\'ajout du statut');
+    }
+  };
+
+  // Remove status
+  const handleRemoveStatus = async (id: string) => {
+    try {
+      await ProjectConfigService.removeStatus(id);
+      setStatuses(statuses.filter(s => s.id !== id));
+    } catch (e) {
+      setConfigError('Erreur lors de la suppression du statut');
+    }
+  };
+  // ...existing code...
+  if (loadingConfig) return <div className="p-8 text-center text-gray-600">Chargement des catégories/statuts…</div>;
+  if (configError) return <div className="p-8 text-center text-red-600">{configError}</div>;
 
   const [priorities] = useState([
     { id: 'high', label: 'Élevée', color: 'bg-red-500' },
@@ -37,6 +112,7 @@ export const ProjectManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [showAddStatusModal, setShowAddStatusModal] = useState(false);
 
   const handleCreateProject = () => {
     setSelectedProjectId(null);
@@ -92,7 +168,25 @@ export const ProjectManagement: React.FC = () => {
     }
   };
 
-  const selectedProject = selectedProjectId ? projects.find(p => p.id === selectedProjectId) : undefined;
+  const selectedProject = selectedProjectId ? fixProjectForEditor(projects.find(p => p.id === selectedProjectId)) : undefined;
+
+  // Helper to ensure Project matches ProjectData (startDate/endDate always string)
+  function fixProjectForEditor(project?: any): any {
+    if (!project) return undefined;
+    return {
+      ...project,
+      startDate: project.startDate || '',
+      endDate: project.endDate || '',
+      members: Array.isArray(project.members) ? project.members : [],
+      tags: Array.isArray(project.tags) ? project.tags : [],
+      attachments: Array.isArray(project.attachments) ? project.attachments : [],
+      links: Array.isArray(project.links) ? project.links : [],
+      objectives: Array.isArray(project.objectives) ? project.objectives : [],
+      requirements: Array.isArray(project.requirements) ? project.requirements : [],
+      deliverables: Array.isArray(project.deliverables) ? project.deliverables : [],
+      risks: Array.isArray(project.risks) ? project.risks : [],
+    };
+  }
 
   const getStatusBadge = (status: string) => {
     const statusConfig = statuses.find(s => s.id === status);
@@ -399,6 +493,7 @@ export const ProjectManagement: React.FC = () => {
                     <button 
                       className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200"
                       title="Voir"
+                      onClick={() => navigate(`/projects/${project.id}`)}
                     >
                       <Eye className="h-3 w-3 text-gray-600" />
                     </button>
@@ -449,17 +544,65 @@ export const ProjectManagement: React.FC = () => {
               type="text"
               placeholder="Nouvelle catégorie..."
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+              value={newCategory}
+              onChange={e => setNewCategory(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleAddCategory(); }}
             />
-            <button className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+            <button
+              className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
+              onClick={handleAddCategory}
+            >
               +
             </button>
+      {/* Modale d'ajout de statut */}
+      {showAddStatusModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white rounded shadow-lg p-6 min-w-[350px]">
+            <h2 className="text-lg font-bold mb-4">Ajouter un statut</h2>
+            <form
+              onSubmit={e => { e.preventDefault(); handleAddStatus(); }}
+            >
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nom du statut</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  value={newStatus}
+                  onChange={e => setNewStatus(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Couleur</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  value={newStatusColor}
+                  onChange={e => setNewStatusColor(e.target.value)}
+                >
+                  <option value="bg-green-500">Vert</option>
+                  <option value="bg-yellow-500">Jaune</option>
+                  <option value="bg-blue-500">Bleu</option>
+                  <option value="bg-red-500">Rouge</option>
+                  <option value="bg-purple-500">Violet</option>
+                  <option value="bg-gray-500">Gris</option>
+                </select>
+              </div>
+              {statusError && <div className="text-red-600 text-sm">{statusError}</div>}
+              <div className="flex justify-end gap-2 mt-4">
+                <button type="button" className="px-4 py-2 bg-gray-200 rounded" onClick={() => { setShowAddStatusModal(false); setStatusError(''); }}>Annuler</button>
+                <button type="submit" className="px-4 py-2 bg-blue-900 text-white rounded">Ajouter</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
           </div>
           
           <div className="space-y-1 max-h-48 overflow-y-auto border border-gray-300 rounded-lg">
             {categories.map((category, index) => (
               <div key={category} className={`flex items-center justify-between px-4 py-2 ${index % 2 === 1 ? 'bg-gray-50' : ''}`}>
                 <span className="text-sm text-gray-700">{category}</span>
-                <button className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300">
+                <button className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300" onClick={() => handleRemoveCategory(category)}>
                   <X className="h-3 w-3 text-gray-600" />
                 </button>
               </div>
@@ -477,8 +620,11 @@ export const ProjectManagement: React.FC = () => {
               type="text"
               placeholder="Nouveau statut..."
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+              value={newStatus}
+              onChange={e => setNewStatus(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') setShowAddStatusModal(true); }}
             />
-            <button className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+            <button className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800" onClick={() => setShowAddStatusModal(true)}>
               +
             </button>
           </div>
@@ -490,7 +636,7 @@ export const ProjectManagement: React.FC = () => {
                   <div className={`w-4 h-4 rounded-full ${status.color}`}></div>
                   <span className="text-sm text-gray-700">{status.label}</span>
                 </div>
-                <button className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300">
+                <button className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300" onClick={() => handleRemoveStatus(status.id)}>
                   <X className="h-3 w-3 text-gray-600" />
                 </button>
               </div>

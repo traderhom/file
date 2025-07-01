@@ -15,6 +15,7 @@ export const Navbar: React.FC = () => {
     { name: 'Formation', href: '/formation' },
     { name: 'Recherche', href: '/recherche' },
     { name: 'Actualités', href: '/actualites' },
+    { name: 'Newsletter', href: '/newsletter' },
   ];
 
   const authenticatedItems = [
@@ -74,7 +75,7 @@ export const Navbar: React.FC = () => {
               <LogoComponent />
               {/* Fallback logo (hidden by default, shown if image fails) */}
               {settings.logoUrl && (
-                <div className="hidden flex items-center space-x-3">
+                <div className="hidden items-center space-x-3">
                   <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                     <span className="text-[#1A4B8C] font-bold text-xl">E</span>
                   </div>

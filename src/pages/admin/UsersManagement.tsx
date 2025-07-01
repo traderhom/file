@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, Mail, Shield, User, UserCheck, UserX } from 'lucide-react';
 import { UserEditor } from '../../components/admin/UserEditor';
 
@@ -14,64 +14,19 @@ interface UserAccount {
   department?: string;
 }
 
-export const UsersManagement: React.FC = () => {
-  const [users, setUsers] = useState<UserAccount[]>([
-    {
-      id: '1',
-      name: 'Pierre Dupont',
-      email: 'pierre.dupont@esst.edu',
-      role: 'admin',
-      status: 'active',
-      lastLogin: '15/04/2025',
-      joinDate: '01/09/2020',
-      avatar: 'PD',
-      department: 'Administration'
-    },
-    {
-      id: '2',
-      name: 'Marie Dubois',
-      email: 'marie.dubois@esst.edu',
-      role: 'teacher',
-      status: 'active',
-      lastLogin: '14/04/2025',
-      joinDate: '15/09/2021',
-      avatar: 'MD',
-      department: 'Intelligence Artificielle'
-    },
-    {
-      id: '3',
-      name: 'Jean Martin',
-      email: 'jean.martin@esst.edu',
-      role: 'teacher',
-      status: 'active',
-      lastLogin: '13/04/2025',
-      joinDate: '01/02/2022',
-      avatar: 'JM',
-      department: 'Cybersécurité'
-    },
-    {
-      id: '4',
-      name: 'Sophie Laurent',
-      email: 'sophie.laurent@student.esst.edu',
-      role: 'student',
-      status: 'active',
-      lastLogin: '15/04/2025',
-      joinDate: '01/09/2024',
-      avatar: 'SL',
-      department: 'Master Data Science'
-    },
-    {
-      id: '5',
-      name: 'Alex Chen',
-      email: 'alex.chen@student.esst.edu',
-      role: 'student',
-      status: 'pending',
-      lastLogin: 'Jamais',
-      joinDate: '10/04/2025',
-      avatar: 'AC',
-      department: 'Licence Informatique'
-    }
-  ]);
+export const UsersManagement = () => {
+  const [users, setUsers] = useState<UserAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(data => {
+        setUsers(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -137,36 +92,56 @@ export const UsersManagement: React.FC = () => {
     setCurrentView('edit');
   };
 
-  const handleSaveUser = (userData: UserAccount) => {
+  const handleSaveUser = async (userData: any) => {
     if (selectedUserId) {
       // Update existing user
-      setUsers(prev => prev.map(user => 
-        user.id === selectedUserId ? { ...userData, id: selectedUserId } : user
-      ));
+      const res = await fetch(`/api/users/${selectedUserId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setUsers(prev => prev.map(user => user.id === selectedUserId ? updated : user));
+      }
     } else {
       // Create new user
-      const newUser = {
-        ...userData,
-        id: (users.length + 1).toString()
-      };
-      setUsers(prev => [...prev, newUser]);
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setUsers(prev => [...prev, created]);
+      }
     }
     setCurrentView('list');
     setSelectedUserId(null);
   };
 
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = async (userId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
-      setUsers(prev => prev.filter(user => user.id !== userId));
+      const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setUsers(prev => prev.filter(user => user.id !== userId));
+      }
     }
   };
 
-  const handleToggleStatus = (userId: string) => {
-    setUsers(prev => prev.map(user => 
-      user.id === userId 
-        ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' as 'active' | 'inactive' | 'pending' }
-        : user
-    ));
+  const handleToggleStatus = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    const newStatus = user.status === 'active' ? 'inactive' : 'active';
+    const res = await fetch(`/api/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...user, status: newStatus })
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setUsers(prev => prev.map(u => u.id === userId ? updated : u));
+    }
   };
 
   const handleCancel = () => {
@@ -175,6 +150,8 @@ export const UsersManagement: React.FC = () => {
   };
 
   const selectedUser = selectedUserId ? users.find(u => u.id === selectedUserId) : undefined;
+
+  if (loading) return <div>Chargement des utilisateurs...</div>;
 
   if (currentView === 'edit' || currentView === 'create') {
     return (
@@ -200,7 +177,11 @@ export const UsersManagement: React.FC = () => {
         </button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards dynamiques (exemple avec données API) */}
+      {/*
+        Pour une version avancée, utilisez un hook global (ex: useUserStats) pour des stats agrégées côté backend.
+        Ici, on garde la logique simple basée sur le tableau users déjà chargé.
+      */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center">
@@ -213,7 +194,6 @@ export const UsersManagement: React.FC = () => {
             </div>
           </div>
         </div>
-        
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
@@ -221,13 +201,10 @@ export const UsersManagement: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Actifs</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {users.filter(u => u.status === 'active').length}
-              </p>
+              <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.status === 'active').length}</p>
             </div>
           </div>
         </div>
-        
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 rounded-lg">
@@ -235,13 +212,10 @@ export const UsersManagement: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">En attente</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {users.filter(u => u.status === 'pending').length}
-              </p>
+              <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.status === 'pending').length}</p>
             </div>
           </div>
         </div>
-        
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="p-2 bg-red-100 rounded-lg">
@@ -249,9 +223,7 @@ export const UsersManagement: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Admins</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {users.filter(u => u.role === 'admin').length}
-              </p>
+              <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.role === 'admin').length}</p>
             </div>
           </div>
         </div>

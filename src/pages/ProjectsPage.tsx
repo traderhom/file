@@ -5,7 +5,6 @@ import {
   Search, 
   Users, 
   Calendar,
-  Filter,
   Grid,
   List,
   Star,
@@ -17,13 +16,13 @@ import {
   Edit,
   Trash2
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+// import { useAuth } from '../contexts/AuthContext';
 import { useProjects } from '../contexts/ProjectsContext';
 import { Navbar } from '../components/Navbar';
 import { ProjectEditor } from '../components/projects/ProjectEditor';
 
 export const ProjectsPage: React.FC = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const { projects, updateProject, createProject, deleteProject } = useProjects();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -145,10 +144,31 @@ export const ProjectsPage: React.FC = () => {
 
   if (editingProject) {
     const project = projects.find(p => p.id === editingProject);
+    // Patch: Ensure all required fields are present and correct types for ProjectData
+    const safeProject = project && project.startDate && project.endDate && Array.isArray(project.members)
+      ? {
+          ...project,
+          startDate: project.startDate || '',
+          endDate: project.endDate || '',
+          members: project.members as string[],
+          priority: project.priority || 'low',
+          tags: project.tags ?? [],
+          attachments: project.attachments ?? [],
+          links: project.links ?? [],
+          objectives: project.objectives ?? [],
+          requirements: project.requirements ?? [],
+          deliverables: project.deliverables ?? [],
+          risks: project.risks ?? [],
+          notes: project.notes ?? '',
+          createdBy: project.createdBy ?? '',
+          createdAt: project.createdAt ?? '',
+          lastModified: project.lastModified ?? '',
+        }
+      : undefined;
     return (
       <ProjectEditor
         projectId={editingProject}
-        initialData={project}
+        initialData={safeProject}
         onSave={handleEditProject}
         onCancel={() => setEditingProject(null)}
       />
@@ -317,7 +337,7 @@ export const ProjectsPage: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
                         <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{project.title}</h3>
-                        {getPriorityIcon(project.priority)}
+                        {getPriorityIcon(project.priority || 'low')}
                       </div>
                       <p className="text-sm text-gray-600 mb-2">{project.category}</p>
                       <p className="text-sm text-gray-700 line-clamp-2">{project.description}</p>
@@ -352,7 +372,7 @@ export const ProjectsPage: React.FC = () => {
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <div className="flex items-center">
                         <Users className="h-4 w-4 mr-1" />
-                        <span>{project.membersList?.length || project.members} membres</span>
+                        <span>{String(project.membersList?.length ?? project.members ?? 0)} membres</span>
                       </div>
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />
@@ -403,7 +423,7 @@ export const ProjectsPage: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center space-x-4 mb-2">
                         <h3 className="text-lg font-bold text-gray-900">{project.title}</h3>
-                        {getPriorityIcon(project.priority)}
+                        {getPriorityIcon(project.priority || 'low')}
                         {getStatusBadge(project.status)}
                       </div>
                       <p className="text-sm text-gray-600 mb-2">{project.category}</p>
@@ -412,7 +432,7 @@ export const ProjectsPage: React.FC = () => {
                       <div className="flex items-center space-x-6 text-sm text-gray-500">
                         <div className="flex items-center">
                           <Users className="h-4 w-4 mr-1" />
-                          <span>{project.membersList?.length || project.members} membres</span>
+                        <span>{String(project.membersList?.length ?? project.members ?? 0)} membres</span>
                         </div>
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
